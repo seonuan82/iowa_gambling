@@ -199,7 +199,7 @@ def display_last_result():
         result = st.session_state.last_result
 
         # 양쪽에 빈 공간을 두어 중앙에 작게 표시
-        _, col1, col2, col3, _ = st.columns([1, 1, 1, 1, 1])
+        _, col1, col2, _ = st.columns([1, 1, 1, 1])
 
         with col1:
             st.metric("보상", f"${result.reward}")
@@ -210,11 +210,11 @@ def display_last_result():
             else:
                 st.metric("손실", "$0")
 
-        with col3:
-            if result.net_outcome >= 0:
-                st.metric("순수익", f"+${result.net_outcome}")
-            else:
-                st.metric("순수익", f"-${abs(result.net_outcome)}")
+        #with col3:
+         #   if result.net_outcome >= 0:
+          #      st.metric("순수익", f"+${result.net_outcome}")
+           # else:
+            #    st.metric("순수익", f"-${abs(result.net_outcome)}")
 
 
 def display_decks():
