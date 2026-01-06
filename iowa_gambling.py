@@ -346,9 +346,6 @@ def main():
     """메인 함수"""
     init_session_state()
 
-    st.title("Iowa Gambling Task")
-    st.markdown("---")
-
     if not st.session_state.game_started:
         # 게임 시작 전: 설명 및 참가자 ID 입력
         show_instructions()
