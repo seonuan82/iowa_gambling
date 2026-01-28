@@ -331,7 +331,7 @@ def display_results():
     
     st.link_button(
         "▶ 다음 실험으로 이동",
-        "https://word-recall-101.streamlit.app/",
+        "https://intertemporal-choice-task-5srsbs8qpesspk4szappzmk.streamlit.app/",
         use_container_width=True
     )
 
