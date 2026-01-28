@@ -31,7 +31,7 @@ class GameSession:
     trials: List[TrialResult] = field(default_factory=list)
     initial_balance: int = 2000
     current_balance: int = 2000
-    total_trials: int = 100
+    total_trials: int = 1
     end_time: Optional[str] = None
 
     def to_dict(self) -> Dict:
