@@ -15,7 +15,7 @@ from igt_utils import (
     calculate_igt_score,
     prepare_for_spreadsheet
 )
-from logging_utils import (
+from igt_logging_utils import (
     log_trial,
     log_session_start,
     log_session_end
@@ -83,11 +83,15 @@ def init_session_state():
         st.session_state.last_result = None
     if 'show_result' not in st.session_state:
         st.session_state.show_result = False
+    if 'show_participant_input' not in st.session_state:
+        st.session_state.show_participant_input = False
+    if 'logged_end' not in st.session_state:
+        st.session_state.logged_end = False
 
 
 def show_instructions():
     """게임 설명 표시"""
-    st.markdown("## 게임 설명")
+    st.markdown("## 🎴 카드 선택 게임 안내")
     st.markdown("""
     이 과제에서는 4개의 카드 덱(A, B, C, D) 중에서 카드를 선택하게 됩니다.
 
@@ -101,8 +105,30 @@ def show_instructions():
     - 어떤 덱이 유리하고 불리한지는 직접 경험하며 파악해야 합니다.
     - 각 덱의 보상과 손실 패턴이 다릅니다.
 
-    준비가 되면 아래에 참가자 ID를 입력하고 게임을 시작하세요.
+    ---
+    이 게임에서의 선택 패턴은  
+    **다른 참가자들과 비교 분석**될 수 있습니다.
+
+    당신은 어느 쪽일까요?
     """)
+
+    if st.button("▶️ 시작하기"):
+        st.session_state.show_participant_input = True
+
+def show_participant_input():
+    """참가자 ID 입력"""
+    st.markdown("## 🧑 참가자 정보 입력")
+
+    participant_id = st.text_input(
+        "참가자 ID를 입력하세요",
+        placeholder="예: P001"
+    )
+
+    if st.button("게임 시작"):
+        if participant_id.strip() == "":
+            st.warning("참가자 ID를 입력해주세요.")
+        else:
+            start_game(participant_id)
 
 
 def start_game(participant_id: str):
@@ -123,7 +149,9 @@ def start_game(participant_id: str):
         session_id=st.session_state.session.session_id,
         participant_id=participant_id
     )
-
+    
+    st.session_state.show_participant_input = False
+    st.rerun()
 
 def select_deck(deck: str):
     """덱 선택 처리"""
@@ -199,7 +227,7 @@ def display_last_result():
         result = st.session_state.last_result
 
         # 양쪽에 빈 공간을 두어 중앙에 작게 표시
-        _, col1, col2, col3, _ = st.columns([1, 1, 1, 1, 1])
+        _, col1, col2, _ = st.columns([1, 1, 1, 1])
 
         with col1:
             st.metric("보상", f"${result.reward}")
@@ -210,11 +238,11 @@ def display_last_result():
             else:
                 st.metric("손실", "$0")
 
-        with col3:
-            if result.net_outcome >= 0:
-                st.metric("순수익", f"+${result.net_outcome}")
-            else:
-                st.metric("순수익", f"-${abs(result.net_outcome)}")
+        #with col3:
+         #   if result.net_outcome >= 0:
+          #      st.metric("순수익", f"+${result.net_outcome}")
+           # else:
+            #    st.metric("순수익", f"-${abs(result.net_outcome)}")
 
 
 def display_decks():
@@ -258,7 +286,7 @@ def display_results():
     scores = calculate_igt_score(session)
 
     # 세션 종료 로깅 (한 번만 실행)
-    if 'logged_end' not in st.session_state:
+    if not st.session_state.logged_end:
         log_session_end(
             session_id=session.session_id,
             participant_id=session.participant_id,
@@ -297,26 +325,26 @@ def display_results():
         st.metric("Deck D", deck_counts['D'])
 
     # 데이터 다운로드 옵션
-    st.markdown("### 데이터 저장")
+    #st.markdown("### 데이터 저장")
 
     # JSON 다운로드
-    json_data = session.to_json()
-    st.download_button(
-        label="JSON으로 다운로드",
-        data=json_data,
-        file_name=f"igt_result_{session.participant_id}_{session.session_id}.json",
-        mime="application/json"
-    )
+    #json_data = session.to_json()
+    #st.download_button(
+    #    label="JSON으로 다운로드",
+    #    data=json_data,
+    #    file_name=f"igt_result_{session.participant_id}_{session.session_id}.json",
+    #    mime="application/json"
+    #)
 
     # CSV용 데이터 (Google Spreadsheet 업로드용)
-    spreadsheet_data = prepare_for_spreadsheet(session)
-    csv_content = "\n".join([",".join(map(str, row)) for row in spreadsheet_data])
-    st.download_button(
-        label="CSV로 다운로드 (Spreadsheet용)",
-        data=csv_content,
-        file_name=f"igt_result_{session.participant_id}_{session.session_id}.csv",
-        mime="text/csv"
-    )
+    #spreadsheet_data = prepare_for_spreadsheet(session)
+    #csv_content = "\n".join([",".join(map(str, row)) for row in spreadsheet_data])
+    #st.download_button(
+    #    label="CSV로 다운로드 (Spreadsheet용)",
+    #    data=csv_content,
+    #    file_name=f"igt_result_{session.participant_id}_{session.session_id}.csv",
+    #    mime="text/csv"
+    #)
 
     # 시행 기록 표시
     with st.expander("전체 시행 기록 보기"):
@@ -332,35 +360,18 @@ def display_results():
                 unsafe_allow_html=True
             )
 
-    # 다시 시작 버튼
-    if st.button("새 게임 시작", type="primary"):
-        st.session_state.game_started = False
-        st.session_state.game_ended = False
-        st.session_state.session = None
-        st.session_state.deck_manager = None
-        st.session_state.logged_end = False
-        st.rerun()
-
 
 def main():
     """메인 함수"""
     init_session_state()
 
     if not st.session_state.game_started:
-        # 게임 시작 전: 설명 및 참가자 ID 입력
         show_instructions()
-        st.markdown("---")
-
-        participant_id = st.text_input(
-            "참가자 ID",
-            placeholder="예: P001",
-            key="participant_input"
-        )
-
-        if st.button("게임 시작", type="primary", disabled=not participant_id):
-            if participant_id:
-                start_game(participant_id)
-                st.rerun()
+    
+        # 시작하기 버튼을 눌렀을 때만 참가자 ID 입력 표시
+        if st.session_state.show_participant_input:
+            st.markdown("---")
+            show_participant_input()
 
     elif st.session_state.game_ended:
         # 게임 종료: 결과 표시
