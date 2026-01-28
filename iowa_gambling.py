@@ -151,7 +151,6 @@ def start_game(participant_id: str):
     )
     
     st.session_state.show_participant_input = False
-    st.rerun()
 
 
 def select_deck(deck: str):
