@@ -329,25 +329,10 @@ def display_results():
     
     NEXT_EXPERIMENT_URL = "https://word-recall-101.streamlit.app/"
     
-    st.markdown(
-        f"""
-        <a href="{NEXT_EXPERIMENT_URL}" target="_self">
-            <button style="
-                width:100%;
-                padding:16px;
-                font-size:20px;
-                font-weight:bold;
-                border-radius:8px;
-                border:none;
-                background-color:#4CAF50;
-                color:white;
-                cursor:pointer;
-            ">
-                ▶ 다음 실험으로 이동
-            </button>
-        </a>
-        """,
-        unsafe_allow_html=True
+    st.link_button(
+        "▶ 다음 실험으로 이동",
+        "https://word-recall-101.streamlit.app/",
+        use_container_width=True
     )
 
     # 데이터 다운로드 옵션
