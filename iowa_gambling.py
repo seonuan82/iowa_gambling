@@ -299,8 +299,9 @@ def display_results():
     st.markdown("## 게임 종료!")
     st.balloons()
 
-    st.markdown("### 실험에 참가해 주셔서 감사합니다. 아래 버튼을 눌러 다음 실험으로 이동해 주세요.")
-
+    st.markdown("### 실험에 참가해 주셔서 감사합니다.")
+    st.markdown("### 아래 버튼을 눌러 다음 실험으로 이동해 주세요.")
+    
     #col1, col2 = st.columns(2)
 
     #with col1:
