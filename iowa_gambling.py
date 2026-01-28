@@ -299,30 +299,55 @@ def display_results():
     st.markdown("## 게임 종료!")
     st.balloons()
 
-    st.markdown("### 최종 결과")
+    st.markdown("### 실험에 참가해 주셔서 감사합니다. 아래 버튼을 눌러 다음 실험으로 이동해 주세요.")
 
-    col1, col2 = st.columns(2)
+    #col1, col2 = st.columns(2)
 
-    with col1:
-        st.metric("최종 잔액", f"${session.current_balance:,}")
-        st.metric("총 수익/손실", f"${scores['profit']:+,}")
+    #with col1:
+    #    st.metric("최종 잔액", f"${session.current_balance:,}")
+    #    st.metric("총 수익/손실", f"${scores['profit']:+,}")
 
-    with col2:
-        st.metric("IGT 점수 (C+D)-(A+B)", scores['net_score'])
-        st.metric("유리한 덱 선택 비율", f"{scores['advantageous_ratio']:.1%}")
+    #with col2:
+    #    st.metric("IGT 점수 (C+D)-(A+B)", scores['net_score'])
+    #    st.metric("유리한 덱 선택 비율", f"{scores['advantageous_ratio']:.1%}")
 
-    st.markdown("### 덱별 선택 횟수")
-    deck_counts = scores['deck_counts']
+    #st.markdown("### 덱별 선택 횟수")
+    #deck_counts = scores['deck_counts']
 
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Deck A", deck_counts['A'])
-    with col2:
-        st.metric("Deck B", deck_counts['B'])
-    with col3:
-        st.metric("Deck C", deck_counts['C'])
-    with col4:
-        st.metric("Deck D", deck_counts['D'])
+    #col1, col2, col3, col4 = st.columns(4)
+    #with col1:
+    #    st.metric("Deck A", deck_counts['A'])
+    #with col2:
+    #    st.metric("Deck B", deck_counts['B'])
+    #with col3:
+    #    st.metric("Deck C", deck_counts['C'])
+    #with col4:
+    #    st.metric("Deck D", deck_counts['D'])
+
+    st.markdown("---")
+    
+    NEXT_EXPERIMENT_URL = "https://word-recall-101.streamlit.app/"
+    
+    st.markdown(
+        f"""
+        <a href="{NEXT_EXPERIMENT_URL}" target="_self">
+            <button style="
+                width:100%;
+                padding:16px;
+                font-size:20px;
+                font-weight:bold;
+                border-radius:8px;
+                border:none;
+                background-color:#4CAF50;
+                color:white;
+                cursor:pointer;
+            ">
+                ▶ 다음 실험으로 이동
+            </button>
+        </a>
+        """,
+        unsafe_allow_html=True
+    )
 
     # 데이터 다운로드 옵션
     #st.markdown("### 데이터 저장")
@@ -347,18 +372,18 @@ def display_results():
     #)
 
     # 시행 기록 표시
-    with st.expander("전체 시행 기록 보기"):
-        for trial in session.trials:
-            net_color = "green" if trial.net_outcome >= 0 else "red"
-            st.markdown(
-                f"**Trial {trial.trial_number}** | "
-                f"Deck {trial.deck_choice} | "
-                f"보상: ${trial.reward} | "
-                f"손실: ${trial.penalty} | "
-                f"순수익: <span style='color:{net_color}'>${trial.net_outcome:+d}</span> | "
-                f"잔액: ${trial.balance_after}",
-                unsafe_allow_html=True
-            )
+    # with st.expander("전체 시행 기록 보기"):
+    #    for trial in session.trials:
+    #        net_color = "green" if trial.net_outcome >= 0 else "red"
+    #        st.markdown(
+    #            f"**Trial {trial.trial_number}** | "
+    #            f"Deck {trial.deck_choice} | "
+    #            f"보상: ${trial.reward} | "
+    #            f"손실: ${trial.penalty} | "
+    #            f"순수익: <span style='color:{net_color}'>${trial.net_outcome:+d}</span> | "
+    #            f"잔액: ${trial.balance_after}",
+    #            unsafe_allow_html=True
+    #        )
 
 
 def main():
