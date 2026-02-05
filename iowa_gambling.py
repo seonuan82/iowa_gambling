@@ -23,7 +23,7 @@ from igt_logging_utils import (
 )
 
 # 배치 로깅 간격 (N시행마다 Google Sheets에 기록)
-BATCH_LOG_INTERVAL = 20
+BATCH_LOG_INTERVAL = 100
 
 # 페이지 설정
 st.set_page_config(
@@ -95,6 +95,8 @@ def init_session_state():
         st.session_state.game_start_timestamp = None
     if 'last_logged_trial_idx' not in st.session_state:
         st.session_state.last_logged_trial_idx = 0
+    if 'game_end_duration' not in st.session_state:
+        st.session_state.game_end_duration = None
 
 
 def show_instructions():
@@ -196,6 +198,7 @@ def select_deck(deck: str):
     # 게임 종료 체크
     if len(session.trials) >= session.total_trials:
         session.end_time = datetime.now().isoformat()
+        st.session_state.game_end_duration = time.time() - st.session_state.game_start_timestamp
         st.session_state.game_ended = True
 
 
@@ -333,10 +336,8 @@ def display_results():
     session = st.session_state.session
     scores = calculate_igt_score(session)
 
-    # 소요시간 계산
-    duration_seconds = None
-    if st.session_state.game_start_timestamp is not None:
-        duration_seconds = time.time() - st.session_state.game_start_timestamp
+    # 소요시간 (100번째 trial 클릭 시점 기준)
+    duration_seconds = st.session_state.game_end_duration
 
     # 세션 종료 로깅 (한 번만 실행)
     if not st.session_state.logged_end:
