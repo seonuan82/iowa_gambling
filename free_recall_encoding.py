@@ -56,7 +56,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-NEXT_EXPERIMENT_URL = "https://w.streamlit.app/"
+NEXT_EXPERIMENT_URL = "https://iowagambling-101.streamlit.app/"
 
 
 def init_session_state():
