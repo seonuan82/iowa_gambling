@@ -19,7 +19,7 @@ from free_recall_utils import (
 
 # Google Spreadsheet 로깅
 try:
-    from igt_logging_utils import log_event
+    from logging_utils import log_event
     LOGGING_AVAILABLE = True
 except ImportError:
     LOGGING_AVAILABLE = False
