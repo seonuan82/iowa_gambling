@@ -7,7 +7,7 @@ Bechara et al. (1994) 기반 의사결정 과제
 
 import streamlit as st
 import time
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from igt_utils import (
     DeckManager,
     GameSession,
@@ -21,6 +21,8 @@ from igt_logging_utils import (
     log_session_start,
     log_session_end
 )
+
+KST = timezone(timedelta(hours=9))
 
 # 배치 로깅 간격 (N시행마다 Google Sheets에 기록)
 BATCH_LOG_INTERVAL = 100
@@ -329,6 +331,7 @@ def display_wait_screen(remaining_seconds):
 
     time.sleep(1)
     st.rerun()
+    st.stop()
 
 
 def display_results():
@@ -384,11 +387,11 @@ def display_results():
 
     st.markdown("---")
     
-    NEXT_EXPERIMENT_URL = "https://free-recall-101.streamlit.app/"
+    NEXT_EXPERIMENT_URL = "https://word-recall-101.streamlit.app/"
     
     st.link_button(
         "▶ 다음 실험으로 이동",
-        "https://free-recall-101.streamlit.app/",
+        "https://intertemporal-choice-task-5srsbs8qpesspk4szappzmk.streamlit.app/",
         use_container_width=True
     )
 
@@ -435,11 +438,12 @@ def main():
 
     if not st.session_state.game_started:
         show_instructions()
-    
+
         # 시작하기 버튼을 눌렀을 때만 참가자 ID 입력 표시
         if st.session_state.show_participant_input:
             st.markdown("---")
             show_participant_input()
+        st.stop()
 
     elif st.session_state.game_ended:
         # 게임 종료: 10분 미만이면 대기 화면, 이상이면 결과 표시
@@ -450,6 +454,7 @@ def main():
             display_wait_screen(MIN_GAME_DURATION - elapsed)
         else:
             display_results()
+        st.stop()
 
     else:
         # 게임 진행 중
@@ -460,8 +465,8 @@ def main():
         st.markdown("---")
 
         display_decks()
+        st.stop()
 
 
 if __name__ == "__main__":
     main()
-
