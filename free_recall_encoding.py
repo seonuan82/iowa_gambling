@@ -54,7 +54,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-NEXT_EXPERIMENT_URL = "https://iowagambling-101.streamlit.app/"
+NEXT_EXPERIMENT_URL = "https://w.streamlit.app/"
 
 
 def init_session_state():
@@ -191,12 +191,14 @@ def main():
 
     if phase == 'setup':
         encoding_setup()
+        st.stop()
     elif phase == 'encoding':
         encoding_phase()
+        st.stop()
     elif phase == 'end':
         show_end_screen()
+        st.stop()
 
 
 if __name__ == "__main__":
     main()
-
