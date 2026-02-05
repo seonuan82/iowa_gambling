@@ -7,7 +7,7 @@ Streamlit 기반 심리학 실험 과제
 """
 
 import streamlit as st
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import time
 from free_recall_utils import (
     FreeRecallSession,
@@ -16,6 +16,8 @@ from free_recall_utils import (
     calculate_recall_scores,
     get_fixed_word_list,
 )
+
+KST = timezone(timedelta(hours=9))
 
 # Google Spreadsheet 로깅
 try:
@@ -58,7 +60,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-NEXT_EXPERIMENT_URL = "https://intertemporal-choice-task-5srsbs8qpesspk4szappzmk.streamlit.app/"
+NEXT_EXPERIMENT_URL = "https://w.streamlit.app/"
 
 
 def init_session_state():
@@ -123,7 +125,7 @@ def recall_setup():
                 participant_id=participant_id,
                 condition="mixed",
                 processing_type="none",
-                start_time=datetime.now().isoformat(),
+                start_time=datetime.now(KST).isoformat(),
                 num_words=15,
                 presentation_duration=2.0,
                 distractor_duration=0,
@@ -226,7 +228,7 @@ def finish_recall():
         )
         session.recalled_words.append(response)
 
-    session.end_time = datetime.now().isoformat()
+    session.end_time = datetime.now(KST).isoformat()
 
     # 점수 계산
     scores = calculate_recall_scores(session)
@@ -280,3 +282,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
