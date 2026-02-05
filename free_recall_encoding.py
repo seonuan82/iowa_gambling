@@ -16,7 +16,7 @@ from free_recall_utils import (
 
 # Google Spreadsheet 로깅
 try:
-    from igt_logging_utils import log_event
+    from logging_utils import gsheet_log_event
     LOGGING_AVAILABLE = True
 except ImportError:
     LOGGING_AVAILABLE = False
@@ -130,7 +130,7 @@ def encoding_setup():
             st.session_state.word_start_time = time.time()
 
             if LOGGING_AVAILABLE:
-                log_event(
+                gsheet_log_event(
                     text="Encoding session started - 15 words, 2s each, mixed",
                     user_id=participant_id,
                     event_type="EncodingStart"
@@ -147,7 +147,7 @@ def encoding_phase():
         # 모든 단어 완료
         session.end_time = datetime.now().isoformat()
         if LOGGING_AVAILABLE:
-            log_event(
+            gsheet_log_event(
                 text="Encoding session completed",
                 user_id=st.session_state.participant_id,
                 event_type="EncodingEnd"
@@ -199,3 +199,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
