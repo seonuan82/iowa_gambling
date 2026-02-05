@@ -19,7 +19,7 @@ from free_recall_utils import (
 
 # Google Spreadsheet 로깅
 try:
-    from logging_utils import log_event
+    from logging_utils import gsheet_log_event
     LOGGING_AVAILABLE = True
 except ImportError:
     LOGGING_AVAILABLE = False
@@ -136,7 +136,7 @@ def recall_setup():
             st.session_state.recalled_words_input = []
 
             if LOGGING_AVAILABLE:
-                log_event(
+                gsheet_log_event(
                     text="Recall session started",
                     user_id=participant_id,
                     event_type="RecallStart"
@@ -254,7 +254,7 @@ def finish_recall():
             f"{duration_str}, "
             f"Words: [{recalled_list}]"
         )
-        log_event(
+        gsheet_log_event(
             text=summary,
             user_id=st.session_state.participant_id,
             event_type="RecallEnd"
