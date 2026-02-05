@@ -42,7 +42,7 @@ def init_sheet(secret_key_name: str, sheet_url: str):
     return sheet
 
 
-def gsheet_log_event(text: str, user_id: str = "", event_type: str = "General"):
+def log_event(text: str, user_id: str = "", event_type: str = "General"):
     """
     이벤트를 Google Spreadsheet에 기록
 
