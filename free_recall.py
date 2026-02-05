@@ -74,7 +74,7 @@ if 'experiment_mode' not in st.session_state:
     mode_param = st.query_params.get("mode", "encoding")
     st.session_state.experiment_mode = mode_param if mode_param in ["encoding", "recall"] else "encoding"
 
-NEXT_EXPERIMENT_URL = "https://w.streamlit.app/"
+NEXT_EXPERIMENT_URL = "https://intertemporal-choice-task-5srsbs8qpesspk4szappzmk.streamlit.app/"
 
 
 def init_session_state():
