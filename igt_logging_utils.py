@@ -124,7 +124,8 @@ def log_session_end(
     participant_id: str,
     final_balance: int,
     net_score: int,
-    deck_counts: dict
+    deck_counts: dict,
+    duration_seconds: Optional[float] = None
 ):
     """
     세션 종료 로깅
@@ -135,13 +136,21 @@ def log_session_end(
         final_balance: 최종 잔액
         net_score: IGT 점수 (C+D)-(A+B)
         deck_counts: 덱별 선택 횟수
+        duration_seconds: 실험 소요시간 (초)
     """
+    duration_str = ""
+    if duration_seconds is not None:
+        minutes = int(duration_seconds) // 60
+        secs = int(duration_seconds) % 60
+        duration_str = f", Duration: {minutes}m{secs:02d}s ({duration_seconds:.1f}s)"
+
     summary = (
         f"Session ended - "
         f"Final: ${final_balance}, "
         f"Net Score: {net_score}, "
         f"A:{deck_counts['A']} B:{deck_counts['B']} "
         f"C:{deck_counts['C']} D:{deck_counts['D']}"
+        f"{duration_str}"
     )
     log_event(
         text=summary,
@@ -152,11 +161,16 @@ def log_session_end(
 
 def log_batch_trials(trials_data: List[List]):
     """
-    여러 시행을 한 번에 기록 (게임 종료 시 사용)
+    여러 시행을 한 번에 기록 (배치 로깅)
+
+    단일 API 호출로 여러 행을 추가하여 API 할당량 절약
 
     Args:
         trials_data: 2D 리스트 형태의 시행 데이터
     """
+    if not trials_data:
+        return
+
     for idx, (secret_key, sheet_url) in enumerate(SHEET_INFO):
         try:
             sheet = init_sheet(secret_key, sheet_url)
@@ -168,9 +182,8 @@ def log_batch_trials(trials_data: List[List]):
                 ]
                 sheet.append_row(header)
 
-            # 모든 시행 데이터 추가
-            for row in trials_data:
-                sheet.append_row(row)
+            # 한 번의 API 호출로 모든 행 추가
+            sheet.append_rows(trials_data)
             break
         except Exception as e:
             if idx == len(SHEET_INFO) - 1:

@@ -6,6 +6,7 @@ Bechara et al. (1994) 기반 의사결정 과제
 """
 
 import streamlit as st
+import time
 from datetime import datetime
 from igt_utils import (
     DeckManager,
@@ -16,10 +17,13 @@ from igt_utils import (
     prepare_for_spreadsheet
 )
 from igt_logging_utils import (
-    log_trial,
+    log_batch_trials,
     log_session_start,
     log_session_end
 )
+
+# 배치 로깅 간격 (N시행마다 Google Sheets에 기록)
+BATCH_LOG_INTERVAL = 20
 
 # 페이지 설정
 st.set_page_config(
@@ -87,6 +91,10 @@ def init_session_state():
         st.session_state.show_participant_input = False
     if 'logged_end' not in st.session_state:
         st.session_state.logged_end = False
+    if 'game_start_timestamp' not in st.session_state:
+        st.session_state.game_start_timestamp = None
+    if 'last_logged_trial_idx' not in st.session_state:
+        st.session_state.last_logged_trial_idx = 0
 
 
 def show_instructions():
@@ -143,6 +151,8 @@ def start_game(participant_id: str):
     )
     st.session_state.last_result = None
     st.session_state.show_result = False
+    st.session_state.game_start_timestamp = time.time()
+    st.session_state.last_logged_trial_idx = 0
 
     # Google Spreadsheet 로깅
     log_session_start(
@@ -175,17 +185,9 @@ def select_deck(deck: str):
     )
     session.trials.append(trial)
 
-    # Google Spreadsheet 로깅
-    log_trial(
-        session_id=session.session_id,
-        participant_id=session.participant_id,
-        trial_number=trial.trial_number,
-        deck_choice=deck,
-        reward=reward,
-        penalty=penalty,
-        net_outcome=net_outcome,
-        balance=session.current_balance
-    )
+    # 주기적 배치 로깅 (N시행마다)
+    if len(session.trials) % BATCH_LOG_INTERVAL == 0:
+        batch_log_pending_trials()
 
     # 결과 저장
     st.session_state.last_result = trial
@@ -280,19 +282,73 @@ def display_progress():
     st.markdown(f"**완료한 시행: {current}회**")
 
 
+def batch_log_pending_trials():
+    """미로깅 시행들을 배치로 Google Spreadsheet에 기록"""
+    session = st.session_state.session
+    last_idx = st.session_state.last_logged_trial_idx
+    current_idx = len(session.trials)
+
+    if current_idx <= last_idx:
+        return
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    trials_data = []
+    for trial in session.trials[last_idx:current_idx]:
+        trials_data.append([
+            timestamp,
+            session.session_id,
+            session.participant_id,
+            trial.trial_number,
+            trial.deck_choice,
+            trial.reward,
+            trial.penalty,
+            trial.net_outcome,
+            trial.balance_after
+        ])
+
+    log_batch_trials(trials_data)
+    st.session_state.last_logged_trial_idx = current_idx
+
+
+def display_wait_screen(remaining_seconds):
+    """최소 시간(10분) 미충족 시 대기 화면 표시"""
+    minutes = int(remaining_seconds) // 60
+    seconds = int(remaining_seconds) % 60
+
+    st.markdown(f"""
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;
+                min-height: 60vh; text-align: center;">
+        <h2>잠시만 기다려 주세요</h2>
+        <p style="font-size: 24px; color: #888;">다음 실험 준비 중입니다.</p>
+        <p style="font-size: 20px; color: #666;">남은 시간: {minutes}분 {seconds:02d}초</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    time.sleep(1)
+    st.rerun()
+
+
 def display_results():
     """최종 결과 표시"""
     session = st.session_state.session
     scores = calculate_igt_score(session)
 
+    # 소요시간 계산
+    duration_seconds = None
+    if st.session_state.game_start_timestamp is not None:
+        duration_seconds = time.time() - st.session_state.game_start_timestamp
+
     # 세션 종료 로깅 (한 번만 실행)
     if not st.session_state.logged_end:
+        # 남은 시행 배치 로깅
+        batch_log_pending_trials()
         log_session_end(
             session_id=session.session_id,
             participant_id=session.participant_id,
             final_balance=session.current_balance,
             net_score=scores['net_score'],
-            deck_counts=scores['deck_counts']
+            deck_counts=scores['deck_counts'],
+            duration_seconds=duration_seconds
         )
         st.session_state.logged_end = True
 
@@ -385,8 +441,14 @@ def main():
             show_participant_input()
 
     elif st.session_state.game_ended:
-        # 게임 종료: 결과 표시
-        display_results()
+        # 게임 종료: 10분 미만이면 대기 화면, 이상이면 결과 표시
+        MIN_GAME_DURATION = 600  # 10분 (초)
+        elapsed = time.time() - st.session_state.game_start_timestamp
+
+        if elapsed < MIN_GAME_DURATION:
+            display_wait_screen(MIN_GAME_DURATION - elapsed)
+        else:
+            display_results()
 
     else:
         # 게임 진행 중
