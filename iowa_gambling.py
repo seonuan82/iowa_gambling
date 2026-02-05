@@ -384,11 +384,11 @@ def display_results():
 
     st.markdown("---")
     
-    NEXT_EXPERIMENT_URL = "https://free-r-101.streamlit.app/"
+    NEXT_EXPERIMENT_URL = "https://free-recall-101.streamlit.app/"
     
     st.link_button(
         "▶ 다음 실험으로 이동",
-        "https://free-r-101.streamlit.app/",
+        "https://free-recall-101.streamlit.app/",
         use_container_width=True
     )
 
