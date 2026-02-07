@@ -60,7 +60,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-NEXT_EXPERIMENT_URL = "https://intertemporal-choice-task-5srsbs8qpesspk4szappzmk.streamlit.app/"
+NEXT_EXPERIMENT_URL = "https://w.streamlit.app/"
 
 
 def init_session_state():
@@ -272,14 +272,16 @@ def main():
 
     phase = st.session_state.phase
 
-    if phase == 'setup':
-        recall_setup()
-    elif phase == 'recall':
-        recall_phase()
-    elif phase == 'end':
-        show_end_screen()
+    # 전체 페이지를 단일 컨테이너로 감싸서 화면 전환 시 이전 내용 제거
+    page = st.empty()
+    with page.container():
+        if phase == 'setup':
+            recall_setup()
+        elif phase == 'recall':
+            recall_phase()
+        elif phase == 'end':
+            show_end_screen()
 
 
 if __name__ == "__main__":
     main()
-
