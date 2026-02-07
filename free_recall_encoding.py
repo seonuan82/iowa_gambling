@@ -56,7 +56,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-NEXT_EXPERIMENT_URL = "https://w.streamlit.app/"
+NEXT_EXPERIMENT_URL = "https://iowagambling-101.streamlit.app/"
 
 
 def init_session_state():
@@ -69,6 +69,7 @@ def init_session_state():
         'participant_id': None,
         'logged_end': False,
         'encoding_start_time': None,
+        'prev_phase': None,
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -214,15 +215,17 @@ def main():
 
     phase = st.session_state.phase
 
-    # 전체 페이지를 단일 컨테이너로 감싸서 화면 전환 시 이전 내용 제거
-    page = st.empty()
-    with page.container():
-        if phase == 'setup':
-            encoding_setup()
-        elif phase == 'encoding':
-            encoding_phase()
-        elif phase == 'end':
-            show_end_screen()
+    # phase가 변경되면 강제로 rerun하여 깨끗한 상태에서 시작
+    if st.session_state.prev_phase != phase:
+        st.session_state.prev_phase = phase
+        st.rerun()
+
+    if phase == 'setup':
+        encoding_setup()
+    elif phase == 'encoding':
+        encoding_phase()
+    elif phase == 'end':
+        show_end_screen()
 
 
 if __name__ == "__main__":
