@@ -162,7 +162,6 @@ def recall_phase():
         # 경과 시간
         if st.session_state.recall_start_time:
             elapsed = int(time.time() - st.session_state.recall_start_time)
-            # st.caption(f"경과 시간: {elapsed}초")
 
         st.markdown("---")
         st.markdown("### 기억나는 단어를 입력하세요")
