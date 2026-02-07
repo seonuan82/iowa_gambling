@@ -141,15 +141,21 @@ def main():
 
         with page.container():
             if current_idx == -1:
-                # 2초 대기 화면
+                # 시작 대기 화면
                 st.markdown(
-                    '<div class="phase-indicator">학습 단계 준비 중...</div>',
+                    '<div class="phase-indicator">학습 단계 준비</div>',
                     unsafe_allow_html=True
                 )
                 st.markdown(
-                    '<div class="word-display" style="color: #888;">잠시 후 단어가 나타납니다</div>',
+                    '<div class="word-display" style="color: #888;">준비되면 아래 버튼을 누르세요</div>',
                     unsafe_allow_html=True
                 )
+                if st.button("▶ 학습 시작", type="primary", use_container_width=True):
+                    st.session_state.current_word_idx = 0
+                    st.session_state.word_start_time = time.time()
+                    page.empty()
+                    st.rerun()
+
             elif current_idx < len(session.presented_words):
                 # 단어 표시
                 st.markdown(
@@ -163,17 +169,18 @@ def main():
                     unsafe_allow_html=True
                 )
 
-        # 로직 처리
-        if current_idx == -1:
-            elapsed = time.time() - st.session_state.encoding_start_time
-            if elapsed >= 5.0:  # 5초 대기 (이전 화면 제거 시간 확보)
-                st.session_state.current_word_idx = 0
-                st.session_state.word_start_time = time.time()
-            time.sleep(0.5)
-            page.empty()
-            st.rerun()
+                # 시간 경과 후 다음 단어로
+                elapsed = time.time() - st.session_state.word_start_time
+                remaining = max(0, session.presentation_duration - elapsed)
+                if remaining <= 0:
+                    st.session_state.current_word_idx += 1
+                    st.session_state.word_start_time = time.time()
+                time.sleep(0.5)
+                page.empty()
+                st.rerun()
 
-        elif current_idx >= len(session.presented_words):
+        # 모든 단어 완료 체크
+        if current_idx >= len(session.presented_words):
             session.end_time = datetime.now().isoformat()
             if LOGGING_AVAILABLE:
                 gsheet_log_event(
@@ -182,16 +189,6 @@ def main():
                     event_type="EncodingEnd"
                 )
             st.session_state.phase = 'end'
-            page.empty()
-            st.rerun()
-
-        else:
-            elapsed = time.time() - st.session_state.word_start_time
-            remaining = max(0, session.presentation_duration - elapsed)
-            if remaining <= 0:
-                st.session_state.current_word_idx += 1
-                st.session_state.word_start_time = time.time()
-            time.sleep(0.5)
             page.empty()
             st.rerun()
 
