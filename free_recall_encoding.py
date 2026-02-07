@@ -94,53 +94,56 @@ def show_end_screen():
 
 def encoding_setup():
     """학습 세션 - 참가자 ID 입력"""
-    st.markdown("## 📝 단어 기억 과제 - 학습")
-    st.markdown("---")
-    st.markdown("""
-    ### 과제 설명
+    container = st.empty()
+    with container.container():
+        st.markdown("## 📝 단어 기억 과제 - 학습")
+        st.markdown("---")
+        st.markdown("""
+        ### 과제 설명
 
-    화면에 단어가 하나씩 나타납니다.
-    각 단어를 **잘 기억해주세요.**
+        화면에 단어가 하나씩 나타납니다.
+        각 단어를 **잘 기억해주세요.**
 
-    나중에 기억나는 단어를 모두 입력하게 됩니다.
-    """)
-    st.markdown("---")
+        나중에 기억나는 단어를 모두 입력하게 됩니다.
+        """)
+        st.markdown("---")
 
-    participant_id = st.text_input(
-        "참가자 ID를 입력하세요",
-        placeholder="예: P001"
-    )
+        participant_id = st.text_input(
+            "참가자 ID를 입력하세요",
+            placeholder="예: P001"
+        )
 
-    if st.button("시작하기", type="primary"):
-        if participant_id.strip() == "":
-            st.warning("참가자 ID를 입력해주세요.")
-        else:
-            word_list = get_fixed_word_list(randomize=True)
-            st.session_state.session = FreeRecallSession(
-                session_id=generate_session_id(),
-                participant_id=participant_id,
-                condition="mixed",
-                processing_type="none",
-                start_time=datetime.now(KST).isoformat(),
-                num_words=15,
-                presentation_duration=2.0,
-                distractor_duration=0,
-                recall_duration=0,
-                presented_words=word_list,
-            )
-            st.session_state.participant_id = participant_id
-            st.session_state.phase = 'encoding'
-            st.session_state.current_word_idx = -1  # -1로 시작하여 2초 대기 후 0번째 단어
-            st.session_state.encoding_start_time = time.time()
-            st.session_state.word_start_time = time.time()
-
-            if LOGGING_AVAILABLE:
-                gsheet_log_event(
-                    text="Encoding session started - 15 words, 2s each, mixed",
-                    user_id=participant_id,
-                    event_type="EncodingStart"
+        if st.button("시작하기", type="primary"):
+            if participant_id.strip() == "":
+                st.warning("참가자 ID를 입력해주세요.")
+            else:
+                word_list = get_fixed_word_list(randomize=True)
+                st.session_state.session = FreeRecallSession(
+                    session_id=generate_session_id(),
+                    participant_id=participant_id,
+                    condition="mixed",
+                    processing_type="none",
+                    start_time=datetime.now(KST).isoformat(),
+                    num_words=15,
+                    presentation_duration=2.0,
+                    distractor_duration=0,
+                    recall_duration=0,
+                    presented_words=word_list,
                 )
-            st.rerun()
+                st.session_state.participant_id = participant_id
+                st.session_state.phase = 'encoding'
+                st.session_state.current_word_idx = -1  # -1로 시작하여 2초 대기 후 0번째 단어
+                st.session_state.encoding_start_time = time.time()
+                st.session_state.word_start_time = time.time()
+
+                if LOGGING_AVAILABLE:
+                    gsheet_log_event(
+                        text="Encoding session started - 15 words, 2s each, mixed",
+                        user_id=participant_id,
+                        event_type="EncodingStart"
+                    )
+                container.empty()  # 컨테이너 비우기
+                st.rerun()
 
 
 def encoding_phase():
@@ -148,17 +151,41 @@ def encoding_phase():
     session = st.session_state.session
     current_idx = st.session_state.current_word_idx
 
-    # 2초 대기 화면 (-1 인덱스일 때)
-    if current_idx == -1:
-        st.markdown(
-            '<div class="phase-indicator">학습 단계 준비 중...</div>',
-            unsafe_allow_html=True
-        )
-        st.markdown(
-            '<div class="word-display" style="color: #888;">잠시 후 단어가 나타납니다</div>',
-            unsafe_allow_html=True
-        )
+    # 전체를 하나의 container로 감싸기
+    container = st.empty()
+    with container.container():
+        # 2초 대기 화면 (-1 인덱스일 때)
+        if current_idx == -1:
+            st.markdown(
+                '<div class="phase-indicator">학습 단계 준비 중...</div>',
+                unsafe_allow_html=True
+            )
+            st.markdown(
+                '<div class="word-display" style="color: #888;">잠시 후 단어가 나타납니다</div>',
+                unsafe_allow_html=True
+            )
 
+        elif current_idx >= len(session.presented_words):
+            # 모든 단어 완료 - 여기서는 아무것도 표시하지 않음
+            pass
+
+        else:
+            # 진행 표시
+            st.markdown(
+                f'<div class="phase-indicator">학습 단계 | 단어 {current_idx + 1} / {session.num_words}</div>',
+                unsafe_allow_html=True
+            )
+            st.progress((current_idx + 1) / session.num_words)
+
+            # 단어 표시
+            word = session.presented_words[current_idx]
+            st.markdown(
+                f'<div class="word-display">{word.word}</div>',
+                unsafe_allow_html=True
+            )
+
+    # 로직 처리 (container 밖에서)
+    if current_idx == -1:
         elapsed = time.time() - st.session_state.encoding_start_time
         if elapsed >= 2.0:
             st.session_state.current_word_idx = 0
@@ -167,9 +194,8 @@ def encoding_phase():
         else:
             time.sleep(0.5)
             st.rerun()
-        return
 
-    if current_idx >= len(session.presented_words):
+    elif current_idx >= len(session.presented_words):
         # 모든 단어 완료
         session.end_time = datetime.now().isoformat()
         if LOGGING_AVAILABLE:
@@ -180,33 +206,19 @@ def encoding_phase():
             )
         st.session_state.phase = 'end'
         st.rerun()
-        return
 
-    # 진행 표시
-    st.markdown(
-        f'<div class="phase-indicator">학습 단계 | 단어 {current_idx + 1} / {session.num_words}</div>',
-        unsafe_allow_html=True
-    )
-    st.progress((current_idx + 1) / session.num_words)
-
-    # 단어 표시
-    word = session.presented_words[current_idx]
-    st.markdown(
-        f'<div class="word-display">{word.word}</div>',
-        unsafe_allow_html=True
-    )
-
-    # 시간 경과 확인
-    elapsed = time.time() - st.session_state.word_start_time
-    remaining = max(0, session.presentation_duration - elapsed)
-
-    if remaining <= 0:
-        st.session_state.current_word_idx += 1
-        st.session_state.word_start_time = time.time()
-        st.rerun()
     else:
-        time.sleep(0.5)
-        st.rerun()
+        # 시간 경과 확인
+        elapsed = time.time() - st.session_state.word_start_time
+        remaining = max(0, session.presentation_duration - elapsed)
+
+        if remaining <= 0:
+            st.session_state.current_word_idx += 1
+            st.session_state.word_start_time = time.time()
+            st.rerun()
+        else:
+            time.sleep(0.5)
+            st.rerun()
 
 
 def main():
