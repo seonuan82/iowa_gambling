@@ -72,6 +72,7 @@ def init_session_state():
         'recall_start_time': None,
         'participant_id': None,
         'logged_end': False,
+        'prev_phase': None,
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -96,105 +97,110 @@ def show_end_screen():
 
 def recall_setup():
     """회상 세션 - 참가자 ID 입력"""
-    st.markdown("## 📝 단어 기억 과제 - 회상")
-    st.markdown("---")
-    st.markdown("""
-    ### 과제 설명
+    container = st.empty()
+    with container.container():
+        st.markdown("## 📝 단어 기억 과제 - 회상")
+        st.markdown("---")
+        st.markdown("""
+        ### 과제 설명
 
-    이전에 학습한 단어를 **최대한 많이** 기억해서 입력해주세요.
+        이전에 학습한 단어를 **최대한 많이** 기억해서 입력해주세요.
 
-    - 순서는 상관없습니다.
-    - 기억나는 대로 자유롭게 입력하면 됩니다.
-    - 정확하지 않아도 괜찮으니, 최대한 많이 기억해보세요.
-    """)
-    st.markdown("---")
+        - 순서는 상관없습니다.
+        - 기억나는 대로 자유롭게 입력하면 됩니다.
+        - 정확하지 않아도 괜찮으니, 최대한 많이 기억해보세요.
+        """)
+        st.markdown("---")
 
-    participant_id = st.text_input(
-        "참가자 ID를 입력하세요",
-        placeholder="예: P001"
-    )
+        participant_id = st.text_input(
+            "참가자 ID를 입력하세요",
+            placeholder="예: P001"
+        )
 
-    if st.button("시작하기", type="primary"):
-        if participant_id.strip() == "":
-            st.warning("참가자 ID를 입력해주세요.")
-        else:
-            # 고정 단어 목록 (채점용, 순서 무관)
-            word_list = get_fixed_word_list(randomize=False)
-            st.session_state.session = FreeRecallSession(
-                session_id=generate_session_id(),
-                participant_id=participant_id,
-                condition="mixed",
-                processing_type="none",
-                start_time=datetime.now(KST).isoformat(),
-                num_words=15,
-                presentation_duration=2.0,
-                distractor_duration=0,
-                recall_duration=0,
-                presented_words=word_list,
-            )
-            st.session_state.participant_id = participant_id
-            st.session_state.phase = 'recall'
-            st.session_state.recall_start_time = time.time()
-            st.session_state.recalled_words_input = []
-
-            if LOGGING_AVAILABLE:
-                gsheet_log_event(
-                    text="Recall session started",
-                    user_id=participant_id,
-                    event_type="RecallStart"
+        if st.button("시작하기", type="primary"):
+            if participant_id.strip() == "":
+                st.warning("참가자 ID를 입력해주세요.")
+            else:
+                # 고정 단어 목록 (채점용, 순서 무관)
+                word_list = get_fixed_word_list(randomize=False)
+                st.session_state.session = FreeRecallSession(
+                    session_id=generate_session_id(),
+                    participant_id=participant_id,
+                    condition="mixed",
+                    processing_type="none",
+                    start_time=datetime.now(KST).isoformat(),
+                    num_words=15,
+                    presentation_duration=2.0,
+                    distractor_duration=0,
+                    recall_duration=0,
+                    presented_words=word_list,
                 )
-            st.rerun()
+                st.session_state.participant_id = participant_id
+                st.session_state.phase = 'recall'
+                st.session_state.recall_start_time = time.time()
+                st.session_state.recalled_words_input = []
+
+                if LOGGING_AVAILABLE:
+                    gsheet_log_event(
+                        text="Recall session started",
+                        user_id=participant_id,
+                        event_type="RecallStart"
+                    )
+                container.empty()
+                st.rerun()
 
 
 def recall_phase():
     """회상 단계"""
-    st.markdown(
-        '<div class="phase-indicator">회상 단계 | 기억나는 단어를 입력하세요</div>',
-        unsafe_allow_html=True
-    )
-
-    # 경과 시간
-    if st.session_state.recall_start_time:
-        elapsed = int(time.time() - st.session_state.recall_start_time)
-        st.caption(f"경과 시간: {elapsed}초")
-
-    st.markdown("---")
-    st.markdown("### 기억나는 단어를 입력하세요")
-    st.markdown("*순서는 상관없습니다. 한 단어씩 입력 후 '추가' 버튼을 누르세요.*")
-
-    # 입력된 단어들 표시
-    if st.session_state.recalled_words_input:
-        st.markdown("**입력한 단어:**")
-        words_html = ""
-        for w in st.session_state.recalled_words_input:
-            words_html += f'<span class="recalled-word">{w}</span>'
-        st.markdown(words_html, unsafe_allow_html=True)
-        st.markdown(f"총 {len(st.session_state.recalled_words_input)}개 입력됨")
-
-    st.markdown("---")
-
-    # 단어 입력
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        word_input = st.text_input(
-            "단어 입력",
-            placeholder="기억나는 단어를 입력하세요",
-            key="recall_input",
-            label_visibility="collapsed"
+    container = st.empty()
+    with container.container():
+        st.markdown(
+            '<div class="phase-indicator">회상 단계 | 기억나는 단어를 입력하세요</div>',
+            unsafe_allow_html=True
         )
-    with col2:
-        if st.button("추가", key="add_word", use_container_width=True):
-            if word_input and word_input.strip():
-                word = word_input.strip()
-                if word not in st.session_state.recalled_words_input:
-                    st.session_state.recalled_words_input.append(word)
-                    st.rerun()
 
-    st.markdown("---")
+        # 경과 시간
+        if st.session_state.recall_start_time:
+            elapsed = int(time.time() - st.session_state.recall_start_time)
+            # st.caption(f"경과 시간: {elapsed}초")
 
-    if st.button("회상 완료", type="primary"):
-        finish_recall()
-        st.rerun()
+        st.markdown("---")
+        st.markdown("### 기억나는 단어를 입력하세요")
+        st.markdown("*순서는 상관없습니다. 한 단어씩 입력 후 '추가' 버튼을 누르세요.*")
+
+        # 입력된 단어들 표시
+        if st.session_state.recalled_words_input:
+            st.markdown("**입력한 단어:**")
+            words_html = ""
+            for w in st.session_state.recalled_words_input:
+                words_html += f'<span class="recalled-word">{w}</span>'
+            st.markdown(words_html, unsafe_allow_html=True)
+            st.markdown(f"총 {len(st.session_state.recalled_words_input)}개 입력됨")
+
+        st.markdown("---")
+
+        # 단어 입력
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            word_input = st.text_input(
+                "단어 입력",
+                placeholder="기억나는 단어를 입력하세요",
+                key="recall_input",
+                label_visibility="collapsed"
+            )
+        with col2:
+            if st.button("추가", key="add_word", use_container_width=True):
+                if word_input and word_input.strip():
+                    word = word_input.strip()
+                    if word not in st.session_state.recalled_words_input:
+                        st.session_state.recalled_words_input.append(word)
+                        st.rerun()
+
+        st.markdown("---")
+
+        if st.button("회상 완료", type="primary"):
+            finish_recall()
+            st.rerun()
 
 
 def finish_recall():
@@ -272,15 +278,21 @@ def main():
 
     phase = st.session_state.phase
 
-    # 전체 페이지를 단일 컨테이너로 감싸서 화면 전환 시 이전 내용 제거
-    page = st.empty()
-    with page.container():
-        if phase == 'setup':
-            recall_setup()
-        elif phase == 'recall':
-            recall_phase()
-        elif phase == 'end':
-            show_end_screen()
+    # phase가 변경되면 강제로 rerun하여 깨끗한 상태에서 시작
+    if st.session_state.prev_phase != phase:
+        st.session_state.prev_phase = phase
+        st.rerun()
+
+    if phase == 'setup':
+        recall_setup()
+    elif phase == 'recall':
+        recall_phase()
+    elif phase == 'end':
+        show_end_screen()
+
+
+if __name__ == "__main__":
+    main()
 
 
 if __name__ == "__main__":
