@@ -70,6 +70,16 @@ st.markdown("""
         height: 120px;
         font-size: 32px;
         font-weight: bold;
+        transition: all 0.1s ease;
+    }
+    .stButton > button:active {
+        transform: scale(0.95);
+        background-color: #0056b3 !important;
+        box-shadow: inset 0 3px 5px rgba(0,0,0,0.2);
+    }
+    .stButton > button:focus {
+        outline: 3px solid #80bdff;
+        outline-offset: 2px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -99,6 +109,8 @@ def init_session_state():
         st.session_state.last_logged_trial_idx = 0
     if 'game_end_duration' not in st.session_state:
         st.session_state.game_end_duration = None
+    if 'prev_game_state' not in st.session_state:
+        st.session_state.prev_game_state = None
 
 
 def show_instructions():
@@ -387,11 +399,11 @@ def display_results():
 
     st.markdown("---")
     
-    NEXT_EXPERIMENT_URL = "https://word-recall-101.streamlit.app/"
+    NEXT_EXPERIMENT_URL = "https://free-recall-101.streamlit.app/"
     
     st.link_button(
         "▶ 다음 실험으로 이동",
-        "https://intertemporal-choice-task-5srsbs8qpesspk4szappzmk.streamlit.app/",
+        "https://free-recall-101.streamlit.app/",
         use_container_width=True
     )
 
@@ -436,38 +448,42 @@ def main():
     """메인 함수"""
     init_session_state()
 
-    # 전체 페이지를 단일 컨테이너로 감싸서 화면 전환 시 이전 내용 제거
-    page = st.empty()
-    with page.container():
-        if not st.session_state.game_started:
-            show_instructions()
+    # 현재 게임 상태를 튜플로 표현
+    current_state = (st.session_state.game_started, st.session_state.game_ended)
 
-            # 시작하기 버튼을 눌렀을 때만 참가자 ID 입력 표시
-            if st.session_state.show_participant_input:
-                st.markdown("---")
-                show_participant_input()
+    # 상태가 변경되면 강제로 rerun하여 깨끗한 상태에서 시작
+    if st.session_state.prev_game_state != current_state:
+        st.session_state.prev_game_state = current_state
+        st.rerun()
 
-        elif st.session_state.game_ended:
-            # 게임 종료: 10분 미만이면 대기 화면, 이상이면 결과 표시
-            MIN_GAME_DURATION = 600  # 10분 (초)
-            elapsed = time.time() - st.session_state.game_start_timestamp
+    if not st.session_state.game_started:
+        show_instructions()
 
-            if elapsed < MIN_GAME_DURATION:
-                display_wait_screen(MIN_GAME_DURATION - elapsed)
-            else:
-                display_results()
+        # 시작하기 버튼을 눌렀을 때만 참가자 ID 입력 표시
+        if st.session_state.show_participant_input:
+            st.markdown("---")
+            show_participant_input()
 
+    elif st.session_state.game_ended:
+        # 게임 종료: 10분 미만이면 대기 화면, 이상이면 결과 표시
+        MIN_GAME_DURATION = 600  # 10분 (초)
+        elapsed = time.time() - st.session_state.game_start_timestamp
+
+        if elapsed < MIN_GAME_DURATION:
+            display_wait_screen(MIN_GAME_DURATION - elapsed)
         else:
-            # 게임 진행 중
-            display_balance()
-            st.markdown("---")
+            display_results()
 
-            display_last_result()
-            st.markdown("---")
+    else:
+        # 게임 진행 중
+        display_balance()
+        st.markdown("---")
 
-            display_decks()
+        display_last_result()
+        st.markdown("---")
+
+        display_decks()
 
 
 if __name__ == "__main__":
     main()
-
