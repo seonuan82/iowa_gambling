@@ -166,7 +166,7 @@ def main():
         # 로직 처리
         if current_idx == -1:
             elapsed = time.time() - st.session_state.encoding_start_time
-            if elapsed >= 2.0:
+            if elapsed >= 5.0:  # 5초 대기 (이전 화면 제거 시간 확보)
                 st.session_state.current_word_idx = 0
                 st.session_state.word_start_time = time.time()
             time.sleep(0.5)
@@ -211,4 +211,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
