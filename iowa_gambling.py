@@ -332,18 +332,19 @@ def display_wait_screen(remaining_seconds):
     minutes = int(remaining_seconds) // 60
     seconds = int(remaining_seconds) % 60
 
-    st.markdown(f"""
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;
-                min-height: 60vh; text-align: center;">
-        <h2>잠시만 기다려 주세요</h2>
-        <p style="font-size: 24px; color: #888;">다음 실험 준비 중입니다.</p>
-        <p style="font-size: 20px; color: #666;">남은 시간: {minutes}분 {seconds:02d}초</p>
-    </div>
-    """, unsafe_allow_html=True)
+    container = st.empty()
+    with container.container():
+        st.markdown(f"""
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;
+                    min-height: 60vh; text-align: center;">
+            <h2>잠시만 기다려 주세요</h2>
+            <p style="font-size: 24px; color: #888;">다음 실험 준비 중입니다.</p>
+            <p style="font-size: 20px; color: #666;">남은 시간: {minutes}분 {seconds:02d}초</p>
+        </div>
+        """, unsafe_allow_html=True)
 
     time.sleep(1)
     st.rerun()
-    st.stop()
 
 
 def display_results():
@@ -476,14 +477,17 @@ def main():
 
     else:
         # 게임 진행 중
-        display_balance()
-        st.markdown("---")
+        container = st.empty()
+        with container.container():
+            display_balance()
+            st.markdown("---")
 
-        display_last_result()
-        st.markdown("---")
+            display_last_result()
+            st.markdown("---")
 
-        display_decks()
+            display_decks()
 
 
 if __name__ == "__main__":
     main()
+
