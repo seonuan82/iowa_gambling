@@ -56,7 +56,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-NEXT_EXPERIMENT_URL = "https://iowagambling-101.streamlit.app/"
+NEXT_EXPERIMENT_URL = "https://w.streamlit.app/"
 
 
 def init_session_state():
@@ -68,6 +68,7 @@ def init_session_state():
         'word_start_time': None,
         'participant_id': None,
         'logged_end': False,
+        'encoding_start_time': None,
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -128,7 +129,8 @@ def encoding_setup():
             )
             st.session_state.participant_id = participant_id
             st.session_state.phase = 'encoding'
-            st.session_state.current_word_idx = 0
+            st.session_state.current_word_idx = -1  # -1로 시작하여 2초 대기 후 0번째 단어
+            st.session_state.encoding_start_time = time.time()
             st.session_state.word_start_time = time.time()
 
             if LOGGING_AVAILABLE:
@@ -144,6 +146,27 @@ def encoding_phase():
     """단어 제시 단계"""
     session = st.session_state.session
     current_idx = st.session_state.current_word_idx
+
+    # 2초 대기 화면 (-1 인덱스일 때)
+    if current_idx == -1:
+        st.markdown(
+            '<div class="phase-indicator">학습 단계 준비 중...</div>',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            '<div class="word-display" style="color: #888;">잠시 후 단어가 나타납니다</div>',
+            unsafe_allow_html=True
+        )
+
+        elapsed = time.time() - st.session_state.encoding_start_time
+        if elapsed >= 2.0:
+            st.session_state.current_word_idx = 0
+            st.session_state.word_start_time = time.time()
+            st.rerun()
+        else:
+            time.sleep(0.5)
+            st.rerun()
+        return
 
     if current_idx >= len(session.presented_words):
         # 모든 단어 완료
@@ -191,16 +214,17 @@ def main():
 
     phase = st.session_state.phase
 
-    if phase == 'setup':
-        encoding_setup()
-        st.stop()
-    elif phase == 'encoding':
-        encoding_phase()
-        st.stop()
-    elif phase == 'end':
-        show_end_screen()
-        st.stop()
+    # 전체 페이지를 단일 컨테이너로 감싸서 화면 전환 시 이전 내용 제거
+    page = st.empty()
+    with page.container():
+        if phase == 'setup':
+            encoding_setup()
+        elif phase == 'encoding':
+            encoding_phase()
+        elif phase == 'end':
+            show_end_screen()
 
 
 if __name__ == "__main__":
     main()
+
