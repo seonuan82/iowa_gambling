@@ -60,7 +60,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-NEXT_EXPERIMENT_URL = "https://w.streamlit.app/"
+NEXT_EXPERIMENT_URL = "https://intertemporal-choice-task-5srsbs8qpesspk4szappzmk.streamlit.app/"
 
 
 def init_session_state():
@@ -285,3 +285,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
