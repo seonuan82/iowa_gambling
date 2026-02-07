@@ -387,11 +387,11 @@ def display_results():
 
     st.markdown("---")
     
-    NEXT_EXPERIMENT_URL = "https://free-recall-101.streamlit.app/"
+    NEXT_EXPERIMENT_URL = "https://word-recall-101.streamlit.app/"
     
     st.link_button(
         "▶ 다음 실험으로 이동",
-        "https://free-recall-101.streamlit.app/",
+        "https://intertemporal-choice-task-5srsbs8qpesspk4szappzmk.streamlit.app/",
         use_container_width=True
     )
 
@@ -436,37 +436,38 @@ def main():
     """메인 함수"""
     init_session_state()
 
-    if not st.session_state.game_started:
-        show_instructions()
+    # 전체 페이지를 단일 컨테이너로 감싸서 화면 전환 시 이전 내용 제거
+    page = st.empty()
+    with page.container():
+        if not st.session_state.game_started:
+            show_instructions()
 
-        # 시작하기 버튼을 눌렀을 때만 참가자 ID 입력 표시
-        if st.session_state.show_participant_input:
-            st.markdown("---")
-            show_participant_input()
-        st.stop()
+            # 시작하기 버튼을 눌렀을 때만 참가자 ID 입력 표시
+            if st.session_state.show_participant_input:
+                st.markdown("---")
+                show_participant_input()
 
-    elif st.session_state.game_ended:
-        # 게임 종료: 10분 미만이면 대기 화면, 이상이면 결과 표시
-        MIN_GAME_DURATION = 600  # 10분 (초)
-        elapsed = time.time() - st.session_state.game_start_timestamp
+        elif st.session_state.game_ended:
+            # 게임 종료: 10분 미만이면 대기 화면, 이상이면 결과 표시
+            MIN_GAME_DURATION = 600  # 10분 (초)
+            elapsed = time.time() - st.session_state.game_start_timestamp
 
-        if elapsed < MIN_GAME_DURATION:
-            display_wait_screen(MIN_GAME_DURATION - elapsed)
+            if elapsed < MIN_GAME_DURATION:
+                display_wait_screen(MIN_GAME_DURATION - elapsed)
+            else:
+                display_results()
+
         else:
-            display_results()
-        st.stop()
+            # 게임 진행 중
+            display_balance()
+            st.markdown("---")
 
-    else:
-        # 게임 진행 중
-        display_balance()
-        st.markdown("---")
+            display_last_result()
+            st.markdown("---")
 
-        display_last_result()
-        st.markdown("---")
-
-        display_decks()
-        st.stop()
+            display_decks()
 
 
 if __name__ == "__main__":
     main()
+
