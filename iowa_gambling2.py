@@ -459,35 +459,6 @@ def main():
             if st.session_state.show_participant_input:
                 st.markdown("---")
                 show_participant_input()
-
-    elif st.session_state.game_ended:
-        # 게임 종료: 10분 미만이면 대기 화면, 이상이면 결과 표시
-        MIN_GAME_DURATION = 600  # 10분 (초)
-        elapsed = time.time() - st.session_state.game_start_timestamp
-
-        with page.container():
-            if elapsed < MIN_GAME_DURATION:
-                remaining = MIN_GAME_DURATION - elapsed
-                minutes = int(remaining) // 60
-                seconds = int(remaining) % 60
-
-                st.markdown(f"""
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;
-                            min-height: 60vh; text-align: center;">
-                    <h2>잠시만 기다려 주세요</h2>
-                    <p style="font-size: 24px; color: #888;">다음 실험 준비 중입니다.</p>
-                    <p style="font-size: 20px; color: #666;">남은 시간: {minutes}분 {seconds:02d}초</p>
-                </div>
-                """, unsafe_allow_html=True)
-
-        if elapsed < MIN_GAME_DURATION:
-            time.sleep(1)
-            page.empty()
-            st.rerun()
-        else:
-            with page.container():
-                display_results()
-
     else:
         # 게임 진행 중
         with page.container():
