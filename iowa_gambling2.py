@@ -459,6 +459,11 @@ def main():
             if st.session_state.show_participant_input:
                 st.markdown("---")
                 show_participant_input()
+
+    elif st.session_state.game_ended:
+        with page.container():
+                display_results()
+                
     else:
         # 게임 진행 중
         with page.container():
