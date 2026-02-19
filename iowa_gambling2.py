@@ -3,6 +3,7 @@ Iowa Gambling Task (IGT)
 Streamlit 기반 심리학 실험 과제
 
 Bechara et al. (1994) 기반 의사결정 과제
+IGT 다음 TOM
 """
 
 import streamlit as st
